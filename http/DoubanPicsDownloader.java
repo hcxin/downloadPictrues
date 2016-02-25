@@ -24,13 +24,15 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 
 public class DoubanPicsDownloader {
 	private FirefoxDriver driver;
-	private Set<String> set = new HashSet<String>();
+	private Set<String> downloadSet = new HashSet<String>();
 	private CloseableHttpClient httpClient = HttpClients.createDefault();
 	private Set<String> existFileSet = new HashSet<String>();
-
+	int loop = 0;
+	private String path = "c:/test/";
 	@Test
 	public void run() {
 		System.out.println("========run============");
+		initPath();
 		initExistFileName();
 
 		driver = new FirefoxDriver();
@@ -42,12 +44,11 @@ public class DoubanPicsDownloader {
 
 		}
 
-		int loop = 0;
 		while (loop < 2) {
 			scrollPage();
 			String pageSource = driver.getPageSource();
-			Document doc2 = Jsoup.parse(pageSource);
-			Elements elements = doc2.select("img[src$=.jpg]");
+			Document document = Jsoup.parse(pageSource);
+			Elements elements = document.select("img[src$=.jpg]");
 			for (Element element : elements) {
 				String href = element.attr("src");
 				try {
@@ -82,8 +83,8 @@ public class DoubanPicsDownloader {
 
 	public void downloadPic(String picUrl) throws ClientProtocolException,
 			IOException {
-		if (!set.contains(picUrl)) {
-			set.add(picUrl);
+		if (!downloadSet.contains(picUrl)) {
+			downloadSet.add(picUrl);
 			String shortName = picUrl.substring(picUrl.lastIndexOf("/") + 1,
 					picUrl.length());
 			if (!existFileSet.contains(shortName)) {
@@ -95,7 +96,7 @@ public class DoubanPicsDownloader {
 					InputStream inputStream = entity.getContent();
 					byte b[] = new byte[1024];
 					int i = 0;
-					File storeFile = new File("c:/test/" + shortName);
+					File storeFile = new File(path + shortName);
 					OutputStream outStream = new FileOutputStream(storeFile);
 					while ((i = inputStream.read(b)) != -1) {
 						outStream.write(b, 0, i);
@@ -111,7 +112,6 @@ public class DoubanPicsDownloader {
 	}
 
 	public void initExistFileName() {
-		String path = "c:/test";
 		File f = new File(path);
 		if (!f.exists()) {
 			System.out.println(path + " not exists");
@@ -129,4 +129,11 @@ public class DoubanPicsDownloader {
 		}
 	}
 
+	public void initPath(){
+		File dir = new File(path);
+		if (!dir.exists()) {
+			dir.mkdir();
+			return;
+		}
+	}
 }
